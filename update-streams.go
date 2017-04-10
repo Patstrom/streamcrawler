@@ -35,6 +35,7 @@ func init() {
 
 // Setup api by creating a new api.API object corresponding to the api we are currently targeting
 func init() {
+	flag.Parse()
 	switch {
 	case strings.EqualFold("twitch", site):
 		connection = twitch.NewTwitch("ppq86qhn55lqxfotpqcz69phndjmxg") // Should this be read from file?
@@ -91,8 +92,6 @@ func init() {
 */
 
 func main() {
-	flag.Parse()
-
 	for _, game := range games {
 		// Get all we have on "game" in db
 		streams := connection.Streams(gMap[game], "1") // Get top 100 of "game"
