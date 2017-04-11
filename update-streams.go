@@ -1,19 +1,20 @@
 package main
 
 import (
+	"database/sql"
 	"flag"
 	"fmt"
+	"log"
+	"repos/patstrom/streamcrawler/api"
+	"repos/patstrom/streamcrawler/hitbox"
+	"repos/patstrom/streamcrawler/twitch"
 	"strings"
-    "database/sql"
-	"repos/patstrom/update-streams/api"
-	"repos/patstrom/update-streams/hitbox"
-	"repos/patstrom/update-streams/twitch"
 )
 
 var site, env string
 var connection api.API
-var gMap map[string]string // Maps generic name in "games" to what the api expects. Probably not needed if we get game_id from database
-var database *sql.DB // Database connection
+var gMap map[string]string                                                            // Maps generic name in "games" to what the api expects. Probably not needed if we get game_id from database
+var database *sql.DB                                                                  // Database connection
 var stmtOnlineStreams, stmtUpdateStream, stmtStreamExists, stmtInsertStream *sql.Stmt // Queries
 
 // Games to check
@@ -56,8 +57,7 @@ func init() {
 			"lol":       "league-of-legends",
 		}
 	default:
-        // Log.fatal this
-		panic("API not implemented")
+		log.Fatal("Unknown site")
 	}
 }
 
@@ -96,36 +96,41 @@ func main() {
 		// Get all we have on "game" in db
 		streams := connection.Streams(gMap[game], "1") // Get top 100 of "game"
 
+		if streams.Error {
+			log.Printf(streams.ErrorMessage)
+			//TODO: Handle error like an adult
+		}
+
 		fmt.Println("Game:", gMap[game], "Total:", streams.Total, "Error:", streams.Error, "Error Message:", streams.ErrorMessage)
 		for _, v := range streams.Streams {
 			fmt.Printf("Id: %v\nViewers: %v\nPreview: %v\nLogo: %v\nChannel: {\n\tChannelId: %v\n\tUsername: %v\n\tDisplayName: %v\n\tStatusText: %v\n}\n", v.Id, v.Viewers, v.PreviewImageUrl, v.LogoImageUrl, v.ChannelId, v.UserName, v.DisplayName, v.StatusText)
 		}
 
-        /*
-            if v in dbStreams
-                if metadata is updated // Is this even worth it? Probably not, due to preview and stuff. Just update
-                    continue
-                else
-                    stmtUpdateStream
-                remove the object in dbStreams // This is important
-            else
-                if stmtStreamExists
-                    stmtUpdateStream
-                else
-                    stmtInsertStream
+		/*
+		   if v in dbStreams
+		       if metadata is updated // Is this even worth it? Probably not, due to preview and stuff. Just update
+		           continue
+		       else
+		           stmtUpdateStream
+		       remove the object in dbStreams // This is important
+		   else
+		       if stmtStreamExists
+		           stmtUpdateStream
+		       else
+		           stmtInsertStream
 
-            for range dbStreams
-                stmtUpdateStreams to offline
-        */
+		   for range dbStreams
+		       stmtUpdateStreams to offline
+		*/
 
 	}
 
-    /*
-    // Close stuff
-    stmtOnlineStreams.Close()
-    stmtUpdateStream.Close()
-    stmtStreamExists.Close()
-    stmtInsertStream.Close()
-    database.Close()
-    */
+	/*
+	   // Close stuff
+	   stmtOnlineStreams.Close()
+	   stmtUpdateStream.Close()
+	   stmtStreamExists.Close()
+	   stmtInsertStream.Close()
+	   database.Close()
+	*/
 }

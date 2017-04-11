@@ -3,6 +3,7 @@ package api
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 	"net/url"
 	"time"
@@ -65,10 +66,11 @@ func getJson(u *url.URL, auth *Pair, target interface{}) error {
 }
 
 // Does a GET request to the URL with the given params and unmarshals json into target
-func ApiCall(target interface{}, baseUrl string, auth *Pair, param ...Pair) {
+func ApiCall(target interface{}, baseUrl string, auth *Pair, param ...Pair) bool {
 	u, err := url.Parse(baseUrl)
 	if err != nil {
-		//TODO: Handle error like an adult
+		log.Printf("Failed to parse url: %s", baseUrl)
+		return false
 	}
 	q := u.Query()
 
@@ -78,4 +80,9 @@ func ApiCall(target interface{}, baseUrl string, auth *Pair, param ...Pair) {
 	u.RawQuery = q.Encode()
 
 	err = getJson(u, auth, target)
+	if err != nil {
+		log.Printf("Get request failed: %s", err.Error())
+		return false
+	}
+	return true
 }

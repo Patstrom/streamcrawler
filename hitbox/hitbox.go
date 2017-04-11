@@ -1,7 +1,7 @@
 package hitbox
 
 import (
-	"repos/patstrom/update-streams/api"
+	"repos/patstrom/streamcrawler/api"
 	"strconv"
 )
 
@@ -42,10 +42,17 @@ func (h Hitbox) Streams(game, limit string) api.Streams {
 
 	// Hitbox doesn't require authentication
 	streams := Streams{}
-	api.ApiCall(&streams, "https://api.hitbox.tv/media/list/list/", &api.Pair{"", ""},
+	success := api.ApiCall(&streams, "https://api.hitbox.tv/media/list/list/", &api.Pair{"", ""},
 		gameQ, limitQ, seoQ, liveOnlyQ)
 
-	return convertStreamInfo(&streams)
+	if success {
+		return convertStreamInfo(&streams)
+	} else {
+		return api.Streams{
+			Error:        true,
+			ErrorMessage: "Failed to retrieve information from API",
+		}
+	}
 
 }
 
@@ -71,8 +78,4 @@ func convertStreamInfo(hitboxStreams *Streams) (apiStreams api.Streams) {
 			StatusText:      v.Status})
 	}
 	return
-}
-
-func (h Hitbox) Followers(id int) {
-
 }

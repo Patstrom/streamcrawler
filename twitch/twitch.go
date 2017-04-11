@@ -1,7 +1,7 @@
 package twitch
 
 import (
-	"repos/patstrom/update-streams/api"
+	"repos/patstrom/streamcrawler/api"
 )
 
 // Twitch implements the API interface for the api.twitch.tv api
@@ -43,9 +43,16 @@ func (t Twitch) Streams(game, limit string) api.Streams {
 	streams := Streams{}
 	gameQ := api.Pair{"game", game}
 	limitQ := api.Pair{"limit", limit}
-	api.ApiCall(&streams, "https://api.twitch.tv/kraken/streams/", &t.auth, gameQ, limitQ)
+	success := api.ApiCall(&streams, "https://api.twitch.tv/kraken/streams/", &t.auth, gameQ, limitQ)
 
-	return convertStreamInfo(&streams)
+	if success {
+		return convertStreamInfo(&streams)
+	} else {
+		return api.Streams{
+			Error:        true,
+			ErrorMessage: "Failed to retreive information from API",
+		}
+	}
 }
 
 func convertStreamInfo(twitchStreams *Streams) (apiStreams api.Streams) {
@@ -70,7 +77,4 @@ func convertStreamInfo(twitchStreams *Streams) (apiStreams api.Streams) {
 			StatusText:      v.Channel.Status})
 	}
 	return
-}
-
-func (t Twitch) Followers(id int) {
 }
